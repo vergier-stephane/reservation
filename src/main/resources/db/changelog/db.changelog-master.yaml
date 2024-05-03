@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: sv
+      changes:
+        - createSequence:
+            sequenceName: RESERVATION_SEQ
+            startValue: 1
+            incrementBy: 50
+        - createTable: 
+            tableName: RESERVATION
+            columns:
+              - column:
+                  name: id
+                  type: long
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: restaurant_id
+                  type: long
+              - column:
+                  name: email
+                  type: varchar(256)
+              - column:
+                  name: date
+                  type: timestamp
+
