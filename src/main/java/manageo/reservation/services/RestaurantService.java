@@ -25,9 +25,6 @@ public class RestaurantService {
 
     @Value( "${restaurant.api.url}" )
     private String restoApi;
-
-    @Autowired
-    RestTemplateBuilder builder;
     
     public RestaurantService(WebClient.Builder webClientBuilder,
         ReactorLoadBalancerExchangeFilterFunction lbFunction) {
