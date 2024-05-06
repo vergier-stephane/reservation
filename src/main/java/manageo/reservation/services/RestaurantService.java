@@ -8,12 +8,8 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerExchangeFilterFunction;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -40,9 +36,13 @@ public class RestaurantService {
 
     public Page<RestaurantDto> listRestaurant(Integer page, Integer size) {
 
-        CustomPageDto<RestaurantDto> restaurants = WebClient.builder()
+        CustomPageDto<RestaurantDto> restaurants = WebClient
+            .builder()
             .filter(lbFunction)
-            .build().get().uri(restoApi).accept( MediaType.APPLICATION_JSON)
+            .build()
+            .get()
+            .uri(restoApi)
+            .accept(MediaType.APPLICATION_JSON)
             .retrieve()
             .bodyToMono(new ParameterizedTypeReference<CustomPageDto<RestaurantDto>>() {
 
@@ -52,34 +52,44 @@ public class RestaurantService {
 
     public Optional<RestaurantDto> getRestaurantById(Long restaurantId) {
 
-        RestTemplate restTemplate = builder.errorHandler( new RestTemplateResponseErrorHandler() ).build();
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(restoApi)
             .pathSegment( "detail" , Long.toString( restaurantId ));
-            try {
-                RestaurantDto restaurant = restTemplate.getForObject( uriBuilder.toUriString(), RestaurantDto.class );
-                return Optional.of( restaurant );
-            } catch( EntityNotFoundException e ) {
-                return Optional.empty();
-            }
+        try {
+            RestaurantDto restaurant = WebClient
+                .builder()
+                .filter(lbFunction)
+                .build()
+                .get()
+                .uri( uriBuilder.toUriString() )
+                .accept( MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(RestaurantDto.class)
+                .block();
+            return Optional.of( restaurant );
+        } catch( EntityNotFoundException e ) {
+            return Optional.empty();
+        }
     }
 
     public boolean isAvailable(ReservationDto reservation) {
         
-        RestTemplate restTemplate = new RestTemplate();
-        
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(restoApi)
             .pathSegment( "availability" );
-        
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<ReservationDto> httpEntity = new HttpEntity<ReservationDto>( reservation , headers );
-
-        ResponseEntity<Boolean> available = restTemplate.postForEntity( uriBuilder.toUriString(), 
-                        httpEntity , 
-                        Boolean.class );
-        Boolean avail = available.getBody();
-        return avail != null ? avail : false;
+        Boolean available = WebClient
+            .builder()
+            .filter(lbFunction)
+            .build()
+            .post()
+            .uri( uriBuilder.toUriString() )
+            .headers(h -> h.setContentType(MediaType.APPLICATION_JSON))
+            .accept( MediaType.APPLICATION_JSON)
+            .bodyValue(reservation)
+            .retrieve()
+            .bodyToMono(Boolean.class)
+            .block();
+                    
+        return available != null ? available : false;
     }
 
 }
