@@ -51,10 +51,9 @@ public class ReservationController {
     @PostMapping( path="/" )
     @Operation(summary = "Post a reservation")
     @ApiResponses(value = { 
-        @ApiResponse(responseCode = "200", description = "Return the reservation confimration", 
+        @ApiResponse(responseCode = "200", description = "Return the reservation confirmation", 
           content = { @Content(mediaType = "application/json", 
             schema = @Schema(implementation = ReservationConfirmationDto.class ) ) } ) } )
-
     ReservationConfirmationDto reserve( @RequestBody ReservationDto reservation ) {
         ReservationConfirmationDto dto = new ReservationConfirmationDto();
         dto.setEmail( reservation.getEmail() );
